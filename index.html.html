@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Skye — Weather</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f0f4fb;
+      --surface: #ffffff;
+      --surface2: #f7f9fd;
+      --border: #e4eaf4;
+      --blue: #3b82f6;
+      --blue-light: #eff6ff;
+      --text: #1e293b;
+      --muted: #94a3b8;
+      --shadow: 0 2px 16px rgba(59,130,246,0.07), 0 1px 4px rgba(0,0,0,0.04);
+      --shadow-lg: 0 8px 32px rgba(59,130,246,0.10), 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1rem 5rem;
+    }
+
+    .wrapper { width: 100%; max-width: 480px; }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+    }
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--blue);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .logo span { color: var(--text); }
+
+    .unit-toggle {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .unit-btn {
+      border: none;
+      background: none;
+      border-radius: 7px;
+      padding: 0.3rem 0.75rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .unit-btn.active { background: var(--blue); color: #fff; }
+
+    .search-wrap {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    .search-wrap input {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 0.9rem 6.5rem 0.9rem 3rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text);
+      outline: none;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-wrap input::placeholder { color: var(--muted); }
+    .search-wrap input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.1), var(--shadow);
+    }
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+    .search-btn {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--blue);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.18s;
+    }
+    .search-btn:hover { opacity: 0.88; }
+
+    .main-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 1.75rem;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 1rem;
+      animation: fadeUp 0.4s ease forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .top-row { margin-bottom: 1.4rem; }
+    .city-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; }
+    .meta-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.3rem; flex-wrap: wrap; }
+    .country-pill {
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: var(--blue-light);
+      color: var(--blue);
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+    }
+    .date-label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
+
+    .temp-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .temp-num {
+      font-size: 5.5rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .temp-num sup { font-size: 2rem; font-weight: 600; vertical-align: super; color: var(--blue); }
+    .condition-col { text-align: right; }
+    .weather-emoji {
+      font-size: 4.5rem;
+      line-height: 1;
+      display: block;
+      animation: floatEmoji 5s ease-in-out infinite;
+    }
+    @keyframes floatEmoji {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+    .condition-label { font-size: 0.85rem; font-weight: 600; color: var(--muted); margin-top: 0.4rem; }
+    .feels-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+    .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .stat-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .stat-icon-wrap {
+      width: 38px; height: 38px;
+      background: var(--blue-light);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .stat-label { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
+    .stat-value { font-size: 0.95rem; font-weight: 700; margin-top: 0.1rem; }
+
+    .section-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 1.5rem 0 0.75rem;
+    }
+    .forecast-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+    .fc-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0.85rem 0.4rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: transform 0.18s, box-shadow 0.18s;
+      animation: fadeUp 0.4s ease forwards;
+      opacity: 0;
+    }
+    .fc-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .fc-day { font-size: 0.65rem; font-weight: 700; color: var(--muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .fc-icon { font-size: 1.5rem; margin-bottom: 0.4rem; display: block; }
+    .fc-hi { font-size: 0.88rem; font-weight: 800; }
+    .fc-lo { font-size: 0.72rem; color: var(--muted); margin-top: 0.1rem; }
+
+    .state-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 3rem 1.5rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .state-box .emoji { font-size: 3rem; margin-bottom: 1rem; display: block; }
+    .state-box .s-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .state-box p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+    .err-color { color: #ef4444; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="logo">☁️ <span>Skye</span> Weather</div>
+    <div class="unit-toggle">
+      <button class="unit-btn active" id="btnC" onclick="setUnit('metric')">°C</button>
+      <button class="unit-btn" id="btnF" onclick="setUnit('imperial')">°F</button>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="cityInput" placeholder="Search for a city… e.g. Paris, Mumbai"/>
+    <button class="search-btn" onclick="fetchWeather()">Search</button>
+  </div>
+
+  <div id="stateLoading" class="state-box hidden">
+    <span class="emoji">🌀</span>
+    <div class="s-title">Fetching weather…</div>
+    <p>Just a moment!</p>
+  </div>
+
+  <div id="stateError" class="state-box hidden">
+    <span class="emoji">😕</span>
+    <div class="s-title err-color">City not found</div>
+    <p id="errorMsg">Please check the spelling and try again.</p>
+  </div>
+
+  <div id="stateWelcome" class="state-box">
+    <span class="emoji">🌍</span>
+    <div class="s-title">Welcome to Skye</div>
+    <p>Type any city name above<br/>to get live weather instantly.</p>
+  </div>
+
+  <div id="weatherDisplay" class="hidden">
+    <div class="main-card">
+      <div class="top-row">
+        <div class="city-name" id="cityName">—</div>
+        <div class="meta-row">
+          <span class="country-pill" id="countryCode">—</span>
+          <span class="date-label" id="dateLabel">—</span>
+        </div>
+      </div>
+
+      <div class="temp-section">
+        <div class="temp-num"><span id="tempVal">—</span><sup>°</sup></div>
+        <div class="condition-col">
+          <span class="weather-emoji" id="weatherEmoji">🌤️</span>
+          <div class="condition-label" id="conditionLabel">—</div>
+          <div class="feels-label">Feels like <span id="feelsLike">—</span>°</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-icon-wrap">💧</div>
+          <div>
+            <div class="stat-label">Humidity</div>
+            <div class="stat-value" id="humidity">—</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon-wrap">🌬️</div>
+          <div>
+            <div class="stat-label">Wind Speed</div>
+            <div class="stat-value" id="windSpeed">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">5-Day Forecast</div>
+    <div class="forecast-row" id="forecastRow"></div>
+  </div>
+
+</div>
+<script>
+  const API_KEY = 'bd5e378503939ddaee76f12ad7a97608';
+  let unit = 'metric';
+  const $ = id => document.getElementById(id);
+
+  $('cityInput').addEventListener('keydown', e => { if (e.key === 'Enter') fetchWeather(); });
+
+  function setUnit(u) {
+    unit = u;
+    $('btnC').classList.toggle('active', u === 'metric');
+    $('btnF').classList.toggle('active', u === 'imperial');
+    const c = $('cityName').textContent;
+    if (c && c !== '—') fetchWeather(c);
+  }
+
+  function weatherIcon(id, isDay = true) {
+    if (id >= 200 && id < 300) return '⛈️';
+    if (id >= 300 && id < 400) return '🌦️';
+    if (id >= 500 && id < 600) return id >= 502 ? '🌧️' : '🌦️';
+    if (id >= 600 && id < 700) return '❄️';
+    if (id >= 700 && id < 800) return '🌫️';
+    if (id === 800) return isDay ? '☀️' : '🌙';
+    if (id === 801) return isDay ? '🌤️' : '☁️';
+    if (id <= 803) return '⛅';
+    return '☁️';
+  }
+
+  function formatDate() {
+    return new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  }
+  function shortDay(dt) {
+    return new Date(dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
+  }
+  function windLabel() { return unit === 'metric' ? 'km/h' : 'mph'; }
+  function windVal(ms) { return unit === 'metric' ? Math.round(ms * 3.6) : Math.round(ms * 2.237); }
+
+  function showState(id) {
+    ['stateLoading','stateError','stateWelcome','weatherDisplay'].forEach(s => $(s).classList.add('hidden'));
+    $(id).classList.remove('hidden');
+  }
+
+  async function fetchWeather(override) {
+    const city = override || $('cityInput').value.trim();
+    if (!city) return;
+    showState('stateLoading');
+    try {
+      const [cur, fore] = await Promise.all([
+        fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=${unit}`).then(r=>r.json()),
+        fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=${unit}`).then(r=>r.json())
+      ]);
+      if (cur.cod !== 200) throw new Error(cur.message);
+
+      const isDay = cur.dt > cur.sys.sunrise && cur.dt < cur.sys.sunset;
+      $('cityName').textContent = cur.name;
+      $('countryCode').textContent = cur.sys.country;
+      $('dateLabel').textContent = formatDate();
+      $('tempVal').textContent = Math.round(cur.main.temp);
+      $('feelsLike').textContent = Math.round(cur.main.feels_like);
+      $('conditionLabel').textContent = cur.weather[0].description.replace(/\b\w/g, c => c.toUpperCase());
+      $('weatherEmoji').textContent = weatherIcon(cur.weather[0].id, isDay);
+      $('humidity').textContent = cur.main.humidity + '%';
+      $('windSpeed').textContent = windVal(cur.wind.speed) + ' ' + windLabel();
+
+      const days = {};
+      fore.list.forEach(item => {
+        const key = new Date(item.dt * 1000).toDateString();
+        if (!days[key]) days[key] = [];
+        days[key].push(item);
+      });
+      $('forecastRow').innerHTML = Object.entries(days).slice(0,5).map(([_,items],i) => {
+        const noon = items.find(it => new Date(it.dt*1000).getHours() === 12) || items[0];
+        const hi = Math.round(Math.max(...items.map(it => it.main.temp_max)));
+        const lo = Math.round(Math.min(...items.map(it => it.main.temp_min)));
+        const day = i === 0 ? 'Today' : shortDay(noon.dt);
+        return `<div class="fc-card" style="animation-delay:${i*0.06}s">
+          <div class="fc-day">${day}</div>
+          <span class="fc-icon">${weatherIcon(noon.weather[0].id)}</span>
+          <div class="fc-hi">${hi}°</div>
+          <div class="fc-lo">${lo}°</div>
+        </div>`;
+      }).join('');
+
+      showState('weatherDisplay');
+    } catch(e) {
+      $('errorMsg').textContent = 'City not found. Please try a different spelling.';
+      showState('stateError');
+    }
+  }
+</script>
+</body>
+</html>
